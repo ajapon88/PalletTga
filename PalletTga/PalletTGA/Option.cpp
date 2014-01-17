@@ -56,6 +56,7 @@ void Option::SetOption(int index, const char* name, OPTION_ARG is_arg, bool need
 {
 	for (OptionInfoList::iterator it = m_optinfo.begin(); it != m_optinfo.end(); ++it) {
 		if (it->index == index) {
+			// すでに登録済みの番号なら上書き
 			strncpy(it->name, name, OPTION_NAME_MAX_LENGTH);
 			it->is_arg = is_arg;
 			it->need = need;
@@ -64,6 +65,7 @@ void Option::SetOption(int index, const char* name, OPTION_ARG is_arg, bool need
 		}
 	}
 
+	// 追加
 	OptionInfo info;
 
 	memset(&info, 0, sizeof(OptionInfo));
@@ -76,6 +78,7 @@ void Option::SetOption(int index, const char* name, OPTION_ARG is_arg, bool need
 }
 
 // オプション簡易チェック
+// 無効なオプション、オプションの順番、オプション引数があるかどうか、必須オプションがあるかどうかをチェック
 uint32_t Option::CheckOption()
 {
 	uint32_t error = OPTION_ERROR_SUCCESS;
@@ -179,6 +182,8 @@ int Option::CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo *opti
 }
 
 // オプション取得
+// 呼び出すと自動で次のオプションへ行く
+// オプション番号が返る
 int Option::GetNextOption(char *name, char *arg)
 {
 	if (name) name[0] = '\0';
@@ -211,6 +216,8 @@ int Option::GetNextOption(char *name, char *arg)
 
 
 // オプション取得
+// 指定した番号のオプションを取得する
+// 存在しなければ OPTION_INDEX_INVALID が返る
 int Option::GetOptionByIndex(int option_index, char *name, char *arg)
 {
 	if (name) name[0] = '\0';

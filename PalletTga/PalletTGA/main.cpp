@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
 }
 
 
-
+// コマンド説明
 void Usage(int argc, char *argv[])
 {
 	printf("Usage: %s -w width -h height [options] output\n", argv[0]);
@@ -205,6 +205,7 @@ void Usage(int argc, char *argv[])
 	printf("        --fill fill_pixel:  set fill pixel\n");
 }
 
+// TGAヘッダ初期化
 void InitTgaHeader(TgaHeader *header)
 {
     memset(header, 0, sizeof(TgaHeader));
@@ -222,6 +223,7 @@ void InitTgaHeader(TgaHeader *header)
     header->discripter = 0x00;
 }
 
+// TGAフッタ初期化
 void InitTgaFooter(TgaFooter *footer)
 {
     memset(footer, 0, sizeof(TgaFooter));
