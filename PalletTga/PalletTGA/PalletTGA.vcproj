@@ -197,6 +197,10 @@
 				RelativePath=".\Option.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\utility.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -213,6 +217,10 @@
 			</File>
 			<File
 				RelativePath=".\stdint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\utility.h"
 				>
 			</File>
 		</Filter>

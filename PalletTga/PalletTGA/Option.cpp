@@ -76,23 +76,22 @@ void Option::SetOption(int index, const char* name, OPTION_ARG is_arg, bool need
 }
 
 // オプション簡易チェック
-Option::OPTION_ERROR Option::CheckOption()
+uint32_t Option::CheckOption()
 {
-	OPTION_ERROR error = OPTION_ERROR_SUCCESS;
+	uint32_t error = OPTION_ERROR_SUCCESS;
 	int old_arg_index = m_arg_index;
-
-	SetBeginOption();
+	m_arg_index = 0;
 
 	bool not_option = false;
 	std::vector<int> exists;
 	char name[OPTION_NAME_MAX_LENGTH+1];
 	char arg[OPTION_ARG_MAX_LENGTH+1];
 	int opt;
-	while((opt = GetOption(name, arg)) != OPTION_INDEX_END) {
-		if (OPTION_INDEX_INVALID_OPTION == opt) {
+	while((opt = GetNextOption(name, arg)) != OPTION_INDEX_END) {
+		if (OPTION_INDEX_INVALID == opt) {
 			// 未定義のオプション
-			error = OPTION_ERROR_INVALID_OPTION;
-			break;
+			error |= OPTION_ERROR_INVALID_OPTION;
+			continue;
 		}
 		if (OPTION_INDEX_NOT_OPTION == opt) {
 			not_option = true;
@@ -100,8 +99,8 @@ Option::OPTION_ERROR Option::CheckOption()
 		}
 		if (not_option) {
 			// オプションが先に来ていない
-			error = OPTION_ERROR_ORDER;
-			break;
+			error |= OPTION_ERROR_ORDER;
+			continue;
 		}
 
 		exists.push_back(opt);
@@ -110,15 +109,11 @@ Option::OPTION_ERROR Option::CheckOption()
 		for (OptionInfoList::iterator it = m_optinfo.begin(); it != m_optinfo.end(); ++it) {
 			if (it->index == opt) {
 				if (it->is_arg == OPTION_ARG_NEED && strcmp(arg, "") == 0) {
-					error = OPTION_ERROR_NO_ARG;
+					error |= OPTION_ERROR_NO_ARG;
 				}
 
 				break;
 			}
-		}
-
-		if (error != OPTION_ERROR_SUCCESS) {
-			break;
 		}
 	}
 
@@ -134,7 +129,7 @@ Option::OPTION_ERROR Option::CheckOption()
 					}
 				}
 				if (!e) {
-					error = OPTION_ERROR_NEED_OPTION;
+					error |= OPTION_ERROR_NEED_OPTION;
 					break;
 				}
 			}
@@ -146,47 +141,58 @@ Option::OPTION_ERROR Option::CheckOption()
 	return error;
 }
 
-// オプション取得
-int Option::GetOption(char *name, char *arg)
+// 引数がオプションと一致するかどうかチェック。引数も取得する
+// -1: 不一致
+//  0以上: 一致。返り値はインデックスを進める数
+int Option::CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo *optinfo, char *optarg)
 {
-	if (name) {
-		name[0] = '\0';
+	int ret = -1;
+	bool match = false;
+
+	if (optarg) optarg[0] = '\0';
+
+	if (strcmp(m_argv[arg_index], optinfo->name) == 0) {
+		match = true;
+		ret = 0;
 	}
-	if (arg) {
-		arg[0] = '\0';
+
+	if (optinfo->is_arg == OPTION_ARG_NEED || optinfo->is_arg == OPTION_ARG_INDIFFERENT) {
+		if (match) {
+			if (optarg && arg_index+1 < m_argc) {
+				if (m_argv[arg_index+1][0] != '-') {
+					strncpy(optarg, m_argv[arg_index+1], OPTION_ARG_MAX_LENGTH+1);
+					ret = 1;
+				}
+			}
+		} else {
+			int len = strlen(optinfo->name);
+			if (strncmp(m_argv[arg_index], optinfo->name, len) == 0) {
+				ret = 0;
+				if (optarg) {
+					strncpy(optarg, m_argv[arg_index] + len, OPTION_ARG_MAX_LENGTH+1);
+				}
+			}
+		}
 	}
+
+	return ret;
+}
+
+// オプション取得
+int Option::GetNextOption(char *name, char *arg)
+{
+	if (name) name[0] = '\0';
+	if (arg) arg[0] = '\0';
+
 	if (m_arg_index >= m_argc) {
 		return OPTION_INDEX_END;
 	}
 
 	for (OptionInfoList::iterator it = m_optinfo.begin(); it != m_optinfo.end(); ++it) {
-		bool match = false;
+		int shift = CheckOptionByArgIndex(m_arg_index, &(*it), arg);
 
-		if (strcmp(m_argv[m_arg_index], it->name) == 0) {
-			match = true;
-		}
-
-		if (it->is_arg == OPTION_ARG_NEED || it->is_arg == OPTION_ARG_INDIFFERENT) {
-			if (match) {
-				if (arg && m_arg_index+1 < m_argc) {
-					if (m_argv[m_arg_index+1][0] != '-') {
-						m_arg_index++;
-						strncpy(arg, m_argv[m_arg_index], OPTION_ARG_MAX_LENGTH+1);
-					}
-				}
-			} else {
-				int len = strlen(it->name);
-				if (strncmp(m_argv[m_arg_index], it->name, len) == 0) {
-					match = true;
-					if (arg) {
-						strncpy(arg, m_argv[m_arg_index] + len, OPTION_ARG_MAX_LENGTH+1);
-					}
-				}
-			}
-		}
-
-		if (match) {
-			m_arg_index++;
+		if (shift >= 0) {
+			m_arg_index += shift+1;
 			if (name){
 				strcpy(name, it->name);
 			}
@@ -198,7 +204,33 @@ int Option::GetOption(char *name, char *arg)
 	m_arg_index++;
 
 	if (name[0] == '-') {
-		return OPTION_INDEX_INVALID_OPTION;
+		return OPTION_INDEX_INVALID;
 	}
 	return OPTION_INDEX_NOT_OPTION;
+}
+
+
+// オプション取得
+int Option::GetOptionByIndex(int option_index, char *name, char *arg)
+{
+	if (name) name[0] = '\0';
+	if (arg) arg[0] = '\0';
+
+	for (OptionInfoList::iterator it = m_optinfo.begin(); it != m_optinfo.end(); ++it) {
+		if (it->index == option_index) {
+			for (int i = 0; i < m_argc; i++) {
+				int shift = CheckOptionByArgIndex(i, &(*it), arg);
+				if (shift >= 0) {
+					if (name) {
+						strcpy(name, it->name);
+					}
+					return it->index;
+				}
+			}
+
+			break;
+		}
+	}
+
+	return OPTION_INDEX_INVALID;
 }

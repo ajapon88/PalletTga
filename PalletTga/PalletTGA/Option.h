@@ -4,6 +4,7 @@
 #define __OPTION_H__
 
 #include <vector>
+#include "stdint.h"
 
 
 class Option
@@ -16,7 +17,7 @@ public:
 
 	enum OPTION_INDEX {
 		OPTION_INDEX_END = -1,
-		OPTION_INDEX_INVALID_OPTION = -2,
+		OPTION_INDEX_INVALID = -2,
 		OPTION_INDEX_NOT_OPTION = 0,
 		OPTION_INDEX_START = 1,
 	};
@@ -27,13 +28,12 @@ public:
 		OPTION_ARG_INDIFFERENT,
 	};
 
-	enum OPTION_ERROR {
-		OPTION_ERROR_SUCCESS = 0,
-		OPTION_ERROR_INVALID_OPTION,
-		OPTION_ERROR_NO_ARG,
-		OPTION_ERROR_ORDER,
-		OPTION_ERROR_NEED_OPTION,
-		OPTION_ERROR_FAITAL,
+	enum OPTION_ERROR_FLAG {
+		OPTION_ERROR_SUCCESS		= 0,
+		OPTION_ERROR_INVALID_OPTION	= 1<<0,
+		OPTION_ERROR_NO_ARG			= 1<<1,
+		OPTION_ERROR_ORDER			= 1<<2,
+		OPTION_ERROR_NEED_OPTION	= 1<<3,
 	};
 
 private:
@@ -53,6 +53,7 @@ private:
 
 
 	void DestroyArg();
+	int CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo *optinfo, char *option_arg);
 
 public:
 	Option(void);
@@ -61,9 +62,10 @@ public:
 
 	void SetArg(int argc, char *argv[]);
 	void SetOption(int index, const char* name, OPTION_ARG is_arg, bool need);
-	OPTION_ERROR CheckOption();
-	int GetOption(char *name, char *arg);
-	void SetBeginOption() { m_arg_index = 0; }
+	uint32_t CheckOption();
+	int GetNextOption(char *name, char *arg);
+	int GetOptionByIndex(int option_index, char *name, char *arg);
+	void ResetOptionIndex() { m_arg_index = 0; }
 };
 
 

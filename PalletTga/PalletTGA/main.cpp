@@ -7,6 +7,8 @@
 #include "stdint.h"
 //#include <stdint.h>
 
+#include "utility.h"
+
 #define COLOR_ARGB(a, r, g, b) (((a)<<24)+((r)<<16)+((g)<<8)+(b))
 #define ALPHA(color) (((color)>>24)&0xFF)
 #define RED(color) (((color)>>16)&0xFF)
@@ -46,6 +48,7 @@ namespace {
 		OPT_H,
 		OPT_FILL,
 		OPT_RLE,
+		OPT_HELP,
 		OPT_MAX
 	};
 }
@@ -58,12 +61,13 @@ void InitTgaFooter(TgaFooter *footer);
 int main(int argc, char *argv[])
 {
 	Option option;
-#if 0
+#if 0	// デバッグ用
 	{
 		char *_argv[] = {
 			"実行ファイル名",
 			"-w", "100",
 			"-h100",
+			"--fill", "0x10",
 			"output.tga"
 		};
 		int _argc = ARRAY_SIZE(_argv);
@@ -76,6 +80,13 @@ int main(int argc, char *argv[])
 	option.SetOption(OPT_W, "-w", Option::OPTION_ARG_NEED, true);
 	option.SetOption(OPT_H, "-h", Option::OPTION_ARG_NEED, true);
 	option.SetOption(OPT_FILL, "--fill", Option::OPTION_ARG_NEED, false);
+	option.SetOption(OPT_HELP, "--help", Option::OPTION_ARG_UNNEED, false);
+
+	if (option.GetOptionByIndex(OPT_HELP, NULL, NULL) != Option::OPTION_INDEX_INVALID) {
+		Usage(argc, argv);
+		DEBUG_PAUSE();
+		return 0;
+	}
 
 	if (option.CheckOption() != Option::OPTION_ERROR_SUCCESS) {
 		Usage(argc, argv);
@@ -91,7 +102,7 @@ int main(int argc, char *argv[])
 	int opt;
 	char option_name[Option::OPTION_NAME_MAX_LENGTH+1];
 	char option_arg[Option::OPTION_ARG_MAX_LENGTH+1];
-	while((opt = option.GetOption(option_name, option_arg)) != Option::OPTION_INDEX_END) {
+	while((opt = option.GetNextOption(option_name, option_arg)) != Option::OPTION_INDEX_END) {
 #ifdef _DEBUG
 		printf("opt: %d:%s(%s)\n", opt, option_name, option_arg);
 #endif
@@ -103,7 +114,11 @@ int main(int argc, char *argv[])
 				height = atoi(option_arg);
 				break;
 			case OPT_FILL:
-				fill = atoi(option_arg);
+				if (strncmp(option_arg, "0x", 2) == 0) {
+					fill = HexStr2Int(option_arg);
+				} else {
+					fill = atoi(option_arg);
+				}
 				break;
 			case Option::OPTION_INDEX_NOT_OPTION:
 				if (strcmp(filename, "") == 0) {
@@ -186,7 +201,8 @@ int main(int argc, char *argv[])
 void Usage(int argc, char *argv[])
 {
 	printf("Usage: %s -w width -h height [options] output\n", argv[0]);
-	printf("        --fill fill_pixel:  fill pixel\n");
+	printf("        --help:  show usage\n");
+	printf("        --fill fill_pixel:  set fill pixel\n");
 }
 
 void InitTgaHeader(TgaHeader *header)
