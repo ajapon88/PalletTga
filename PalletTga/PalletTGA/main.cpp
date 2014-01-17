@@ -12,10 +12,10 @@
 #include "utility.h"
 
 #define COLOR_ARGB(a, r, g, b) (((a)<<24)+((r)<<16)+((g)<<8)+(b))
-#define ALPHA(color) (((color)>>24)&0xFF)
-#define RED(color) (((color)>>16)&0xFF)
-#define GREEN(color) (((color)>>8)&0xFF)
-#define BLUE(color) ((color)&0xFF)
+#define COLOR_ALPHA(color) (((color)>>24)&0xFF)
+#define COLOR_RED(color) (((color)>>16)&0xFF)
+#define COLOR_GREEN(color) (((color)>>8)&0xFF)
+#define COLOR_BLUE(color) ((color)&0xFF)
 
 #pragma pack(1)
 // TGAヘッダ
@@ -48,7 +48,7 @@ namespace {
 	enum {
 		OPT_W = Option::OPTION_INDEX_START,
 		OPT_H,
-		OPT_FILL,
+		OPT_COLOR,
 		OPT_PALLET,
 		OPT_RLE,
 		OPT_HELP,
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
 	option.SetOption(OPT_W, "-w", Option::OPTION_ARG_NEED, true);
 	option.SetOption(OPT_H, "-h", Option::OPTION_ARG_NEED, true);
-	option.SetOption(OPT_FILL, "--fill", Option::OPTION_ARG_NEED, false);
+	option.SetOption(OPT_COLOR, "-c", Option::OPTION_ARG_NEED, false);
 	option.SetOption(OPT_PALLET, "-p", Option::OPTION_ARG_NEED, false);
 	option.SetOption(OPT_HELP, "--help", Option::OPTION_ARG_UNNEED, false);
 
@@ -101,9 +101,10 @@ int main(int argc, char *argv[])
 	}
 
 	uint16_t width, height;
-	uint8_t fill = 0x00;
+	uint32_t color = 0;
 	bool is_rle = false;
 	char filename[256] = "";
+	char palletfile[256] = "";
 
 	int opt;
 	char option_name[Option::OPTION_NAME_MAX_LENGTH+1];
@@ -119,15 +120,16 @@ int main(int argc, char *argv[])
 			case OPT_H:
 				height = atoi(option_arg);
 				break;
-			case OPT_FILL:
+			case OPT_COLOR:
 				if (strncmp(option_arg, "0x", 2) == 0) {
-					fill = HexStr2Int(option_arg);
+					color = HexStr2Int(option_arg);
 				} else {
-					fill = atoi(option_arg);
+					color = atoi(option_arg);
 				}
 				break;
 			case OPT_PALLET: {
-					Pallet::PALLET_ERROR perror = pallet.LoadPalletFile(option_arg);
+					strncpy(palletfile, option_arg, sizeof(palletfile));
+					Pallet::PALLET_ERROR perror = pallet.LoadPalletFile(palletfile);
 					if (Pallet::PALLET_SUCCESS != perror) {
 						printf("Pallet error(%d)\n", perror);
 						DEBUG_PAUSE();
@@ -152,7 +154,10 @@ int main(int argc, char *argv[])
 	printf("output: %s\n", filename);
 	printf("width: %d\n", width);
 	printf("height: %d\n", height);
-	printf("fill pixel: 0x%02x\n", fill);
+	if (strcmp(palletfile, "") != 0) {
+		printf("pallet: %s\n", palletfile);
+	}
+	printf("color: 0x%02x\n", color);
 
 	TgaHeader header;
 	TgaFooter footer;
@@ -205,13 +210,18 @@ int main(int argc, char *argv[])
 	for (int h = 0; h < header.height; h++) {
 		for (int w = 0; w < header.width; w++) {
 			if (header.image_type == 0x01) {
-				ofs.write((char*)&fill, sizeof(fill));
+				uint8_t pixel = static_cast<uint8_t>(color);
+				ofs.write((char*)&pixel, sizeof(pixel));
 			} else {
 				// フルカラー
-				ofs.write((char*)&fill, sizeof(fill));
-				ofs.write((char*)&fill, sizeof(fill));
-				ofs.write((char*)&fill, sizeof(fill));
-				ofs.write((char*)&fill, sizeof(fill));
+				uint8_t a = COLOR_ALPHA(color);
+				uint8_t r = COLOR_RED(color);
+				uint8_t g = COLOR_GREEN(color);
+				uint8_t b = COLOR_BLUE(color);
+				ofs.write((char*)&b, sizeof(b));
+				ofs.write((char*)&g, sizeof(g));
+				ofs.write((char*)&r, sizeof(r));
+				ofs.write((char*)&a, sizeof(a));
 			}
 		}
 	}
@@ -230,7 +240,7 @@ void Usage(int argc, char *argv[])
 {
 	printf("Usage: %s -w width -h height [options] output\n", argv[0]);
 	printf("        --help:  show usage\n");
-	printf("        --fill fill_pixel:  set fill pixel\n");
+	printf("        --c color:  set pixel color\n");
 }
 
 // TGAヘッダ初期化
