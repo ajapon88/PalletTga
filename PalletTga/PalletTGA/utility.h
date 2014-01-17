@@ -2,6 +2,7 @@
 #define __UTILITY_H__
 
 bool IsHex(char hex);
+bool IsHexStr(const char *hex);
 int Hex2Int(char hex);
 int HexStr2Int(const char* hex);
 

@@ -198,6 +198,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Pallet.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\utility.cpp"
 				>
 			</File>
@@ -208,11 +212,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\Color.h"
+				>
+			</File>
+			<File
 				RelativePath=".\define.h"
 				>
 			</File>
 			<File
 				RelativePath=".\Option.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Pallet.h"
 				>
 			</File>
 			<File

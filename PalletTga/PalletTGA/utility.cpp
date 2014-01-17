@@ -11,11 +11,26 @@ bool IsHex(char hex)
 	return false;
 }
 
+bool IsHexStr(const char *hex)
+{
+	if (strncmp(hex, "0x", 2) == 0) {
+		hex += 2;
+	}
+	while(*hex != '\0') {
+		if (!IsHex(*hex)) {
+			return false;
+		}
+		hex++;
+	}
+
+	return true;
+}
+
 int Hex2Int(char hex)
 {
 	if ('0' <= hex && hex <= '9')  return hex-'0';
-	if ('a' <= hex && hex <= 'f')  return hex-'a';
-	if ('A' <= hex && hex <= 'F')  return hex-'A';
+	if ('a' <= hex && hex <= 'f')  return 10+hex-'a';
+	if ('A' <= hex && hex <= 'F')  return 10+hex-'A';
 
 	return 0;
 }
@@ -26,7 +41,7 @@ int HexStr2Int(const char* hex)
 	if (strncmp(hex, "0x", 2) == 0) {
 		hex += 2;
 	}
-	while(hex != '\0') {
+	while(*hex != '\0') {
 		if (!IsHex(*hex)) {
 			break;
 		}

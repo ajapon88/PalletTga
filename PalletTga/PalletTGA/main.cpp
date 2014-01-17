@@ -1,6 +1,8 @@
 #include "define.h"
 
 #include "Option.h"
+#include "Pallet.h"
+
 #include <stdio.h>
 #include <fstream>
 
@@ -47,6 +49,7 @@ namespace {
 		OPT_W = Option::OPTION_INDEX_START,
 		OPT_H,
 		OPT_FILL,
+		OPT_PALLET,
 		OPT_RLE,
 		OPT_HELP,
 		OPT_MAX
@@ -61,6 +64,7 @@ void InitTgaFooter(TgaFooter *footer);
 int main(int argc, char *argv[])
 {
 	Option option;
+	Pallet pallet;
 #if 0	// デバッグ用
 	{
 		char *_argv[] = {
@@ -68,6 +72,7 @@ int main(int argc, char *argv[])
 			"-w", "100",
 			"-h100",
 			"--fill", "0x10",
+			"-p", "pallet.txt",
 			"output.tga"
 		};
 		int _argc = ARRAY_SIZE(_argv);
@@ -80,6 +85,7 @@ int main(int argc, char *argv[])
 	option.SetOption(OPT_W, "-w", Option::OPTION_ARG_NEED, true);
 	option.SetOption(OPT_H, "-h", Option::OPTION_ARG_NEED, true);
 	option.SetOption(OPT_FILL, "--fill", Option::OPTION_ARG_NEED, false);
+	option.SetOption(OPT_PALLET, "-p", Option::OPTION_ARG_NEED, false);
 	option.SetOption(OPT_HELP, "--help", Option::OPTION_ARG_UNNEED, false);
 
 	if (option.GetOptionByIndex(OPT_HELP, NULL, NULL) != Option::OPTION_INDEX_INVALID) {
@@ -120,6 +126,15 @@ int main(int argc, char *argv[])
 					fill = atoi(option_arg);
 				}
 				break;
+			case OPT_PALLET: {
+					Pallet::PALLET_ERROR perror = pallet.LoadPalletFile(option_arg);
+					if (Pallet::PALLET_SUCCESS != perror) {
+						printf("Pallet error(%d)\n", perror);
+						DEBUG_PAUSE();
+						return -1;
+					}
+				}
+				break;
 			case Option::OPTION_INDEX_NOT_OPTION:
 				if (strcmp(filename, "") == 0) {
 					strncpy(filename, option_name, sizeof(filename));
@@ -139,24 +154,23 @@ int main(int argc, char *argv[])
 	printf("height: %d\n", height);
 	printf("fill pixel: 0x%02x\n", fill);
 
-	// とりあえず適当なパレット
-	const uint32_t pallet[] = {
-		COLOR_ARGB(0xFF, 0x00, 0x00, 0x00),
-		COLOR_ARGB(0xFF, 0xFF, 0x00, 0x00),
-		COLOR_ARGB(0xFF, 0x00, 0xFF, 0x00),
-		COLOR_ARGB(0xFF, 0x00, 0x00, 0xFF),
-		COLOR_ARGB(0xFF, 0xFF, 0xFF, 0xFF),
-		COLOR_ARGB(0x00, 0x00, 0x00, 0x00),
-	};
-
 	TgaHeader header;
 	TgaFooter footer;
 	
 	InitTgaHeader(&header);
 	header.width = width;
 	header.height = height;
-	header.colormap_length = ARRAY_SIZE(pallet);
-	header.colormap_size = 8*sizeof(pallet[0]);
+	if (pallet.GetPalletCount() > 0) {
+		header.colormap_type = 0x01;
+		header.image_type = 0x01;
+		header.colormap_length = pallet.GetPalletCount();
+		header.colormap_size = pallet.GetPalletSize();
+	    header.bit_per_pixel = 0x08;
+	} else {
+		// パレットが無ければフルカラーにする
+		header.image_type = 0x02;
+	    header.bit_per_pixel = 0x20;
+	}
 
 	InitTgaFooter(&footer);
 
@@ -170,21 +184,35 @@ int main(int argc, char *argv[])
 	// ヘッダ
 	ofs.write((char*)&header, sizeof(TgaHeader));
 	// パレット
-	for (int i = 0; i < ARRAY_SIZE(pallet); i++) {
-		uint8_t a = ALPHA(pallet[i]);
-		uint8_t r = RED(pallet[i]);
-		uint8_t g = GREEN(pallet[i]);
-		uint8_t b = BLUE(pallet[i]);
+	for (int i = 0; i < pallet.GetPalletCount(); i++) {
+		uint8_t a = pallet.GetPalletColorA(i);
+		uint8_t r = pallet.GetPalletColorR(i);
+		uint8_t g = pallet.GetPalletColorG(i);
+		uint8_t b = pallet.GetPalletColorB(i);
 
-		ofs.write((char*)&b, sizeof(b));
-		ofs.write((char*)&g, sizeof(g));
-		ofs.write((char*)&r, sizeof(r));
-		ofs.write((char*)&a, sizeof(a));
+		if (pallet.GetPalletSize() == Pallet::PALLET_SIZE_RGB) {
+			ofs.write((char*)&b, sizeof(b));
+			ofs.write((char*)&g, sizeof(g));
+			ofs.write((char*)&r, sizeof(r));
+		} else {
+			ofs.write((char*)&b, sizeof(b));
+			ofs.write((char*)&g, sizeof(g));
+			ofs.write((char*)&r, sizeof(r));
+			ofs.write((char*)&a, sizeof(a));
+		}
 	}
 	// データ
-	for (int w = 0; w < header.width; w++) {
-		for (int h = 0; h < header.height; h++) {
-			ofs.write((char*)&fill, sizeof(fill));
+	for (int h = 0; h < header.height; h++) {
+		for (int w = 0; w < header.width; w++) {
+			if (header.image_type == 0x01) {
+				ofs.write((char*)&fill, sizeof(fill));
+			} else {
+				// フルカラー
+				ofs.write((char*)&fill, sizeof(fill));
+				ofs.write((char*)&fill, sizeof(fill));
+				ofs.write((char*)&fill, sizeof(fill));
+				ofs.write((char*)&fill, sizeof(fill));
+			}
 		}
 	}
 	// フッタ
@@ -210,8 +238,8 @@ void InitTgaHeader(TgaHeader *header)
 {
     memset(header, 0, sizeof(TgaHeader));
     header->id_field_length = 0x00;
-    header->colormap_type = 0x01;
-    header->image_type = 0x01;
+    header->colormap_type = 0x00;
+    header->image_type = 0x00;
     header->colormap_index = 0x0000;
     header->colormap_length = 0x0000;
     header->colormap_size = 0x00;
