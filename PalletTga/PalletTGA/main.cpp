@@ -70,8 +70,8 @@ int main(int argc, char *argv[])
 		char *_argv[] = {
 			"実行ファイル名",
 			"-w", "100",
-			"-h100",
-			"--fill", "0x10",
+			"--height100",
+			"-c", "0x10",
 			"-p", "pallet.txt",
 			"output.tga"
 		};
@@ -82,10 +82,10 @@ int main(int argc, char *argv[])
 	option.SetArg(argc, argv);
 #endif
 
-	option.SetOption(OPT_W, "-w", Option::OPTION_ARG_NEED, true);
-	option.SetOption(OPT_H, "-h", Option::OPTION_ARG_NEED, true);
-	option.SetOption(OPT_COLOR, "-c", Option::OPTION_ARG_NEED, false);
-	option.SetOption(OPT_PALLET, "-p", Option::OPTION_ARG_NEED, false);
+	option.SetOption(OPT_W, "-w|--width", Option::OPTION_ARG_NEED, true);
+	option.SetOption(OPT_H, "-h|--height", Option::OPTION_ARG_NEED, true);
+	option.SetOption(OPT_COLOR, "-c|--color", Option::OPTION_ARG_NEED, false);
+	option.SetOption(OPT_PALLET, "-p|--pallet", Option::OPTION_ARG_NEED, false);
 	option.SetOption(OPT_HELP, "--help", Option::OPTION_ARG_UNNEED, false);
 
 	if (option.GetOptionByIndex(OPT_HELP, NULL, NULL) != Option::OPTION_INDEX_INVALID) {
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 					strncpy(palletfile, option_arg, sizeof(palletfile));
 					Pallet::PALLET_ERROR perror = pallet.LoadPalletFile(palletfile);
 					if (Pallet::PALLET_SUCCESS != perror) {
-						printf("Pallet error(%d)\n", perror);
+						printf("Pallet error(%d): %s\n", perror, pallet.GetErrorMessage(perror));
 						DEBUG_PAUSE();
 						return -1;
 					}

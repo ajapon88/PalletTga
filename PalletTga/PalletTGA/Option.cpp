@@ -54,6 +54,7 @@ void Option::SetArg(int argc, char *argv[])
 // オプション設定
 void Option::SetOption(int index, const char* name, OPTION_ARG is_arg, bool need)
 {
+#if 0
 	for (OptionInfoList::iterator it = m_optinfo.begin(); it != m_optinfo.end(); ++it) {
 		if (it->index == index) {
 			// すでに登録済みの番号なら上書き
@@ -64,6 +65,7 @@ void Option::SetOption(int index, const char* name, OPTION_ARG is_arg, bool need
 			return;
 		}
 	}
+#endif
 
 	// 追加
 	OptionInfo info;
@@ -151,34 +153,48 @@ int Option::CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo *opti
 {
 	int ret = -1;
 	bool match = false;
+	char optname[OPTION_ARG_MAX_LENGTH+1];
 
 	if (optarg) optarg[0] = '\0';
+	memcpy(optname, optinfo->name, sizeof(optname));
 
-	if (strcmp(m_argv[arg_index], optinfo->name) == 0) {
-		match = true;
-		ret = 0;
-	}
+	char *p = optname;
+	char *name = NULL;
 
-	if (optinfo->is_arg == OPTION_ARG_NEED || optinfo->is_arg == OPTION_ARG_INDIFFERENT) {
-		if (match) {
-			if (optarg && arg_index+1 < m_argc) {
-				if (m_argv[arg_index+1][0] != '-') {
-					strncpy(optarg, m_argv[arg_index+1], OPTION_ARG_MAX_LENGTH+1);
-					ret = 1;
+	while(name = strtok(p, "|")) {
+		p = NULL;
+
+		if (strcmp(m_argv[arg_index], name) == 0) {
+			match = true;
+			ret = 0;
+		}
+
+		if (optinfo->is_arg == OPTION_ARG_NEED || optinfo->is_arg == OPTION_ARG_INDIFFERENT) {
+			if (match) {
+				if (optarg && arg_index+1 < m_argc) {
+					if (m_argv[arg_index+1][0] != '-') {
+						strncpy(optarg, m_argv[arg_index+1], OPTION_ARG_MAX_LENGTH+1);
+						ret = 1;
+					}
 				}
-			}
-		} else {
-			int len = strlen(optinfo->name);
-			if (strncmp(m_argv[arg_index], optinfo->name, len) == 0) {
-				ret = 0;
-				if (optarg) {
-					strncpy(optarg, m_argv[arg_index] + len, OPTION_ARG_MAX_LENGTH+1);
+			} else {
+				int len = strlen(name);
+				if (strncmp(m_argv[arg_index], name, len) == 0) {
+					match = true;
+					ret = 0;
+					if (optarg) {
+						strncpy(optarg, m_argv[arg_index] + len, OPTION_ARG_MAX_LENGTH+1);
+					}
 				}
 			}
 		}
+
+		if (match) {
+			return ret;
+		}
 	}
 
-	return ret;
+	return -1;
 }
 
 // オプション取得
@@ -197,10 +213,10 @@ int Option::GetNextOption(char *name, char *arg)
 		int shift = CheckOptionByArgIndex(m_arg_index, &(*it), arg);
 
 		if (shift >= 0) {
-			m_arg_index += shift+1;
 			if (name){
-				strcpy(name, it->name);
+				strcpy(name, m_argv[m_arg_index]);
 			}
+			m_arg_index += shift+1;
 			return it->index;
 		}
 	}
@@ -228,8 +244,8 @@ int Option::GetOptionByIndex(int option_index, char *name, char *arg)
 			for (int i = 0; i < m_argc; i++) {
 				int shift = CheckOptionByArgIndex(i, &(*it), arg);
 				if (shift >= 0) {
-					if (name) {
-						strcpy(name, it->name);
+					if (name){
+						strcpy(name, m_argv[i]);
 					}
 					return it->index;
 				}

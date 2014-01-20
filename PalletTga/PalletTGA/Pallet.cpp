@@ -64,3 +64,19 @@ Pallet::PALLET_ERROR Pallet::LoadPalletFile(const char* filename)
 
 	return PALLET_SUCCESS;
 }
+
+
+const char *Pallet::GetErrorMessage(PALLET_ERROR errono)
+{
+	switch (errono) {
+	case PALLET_ERROR_FILE_OPEN_FAILED:
+		return "Pallet file open failed.";
+	case PALLET_ERROR_NOT_HEX_FORMAT:
+		return "Pallet color format is not hex.";
+	case PALLET_ERROR_NOT_COLOR_FORMAT:
+		return "Pallet color is invalid format .";
+	case PALLET_ERROR_SIZE_NOT_MATCH:
+		return "Pallet color size is not match.";
+	}
+	return "Fatal error.";
+}

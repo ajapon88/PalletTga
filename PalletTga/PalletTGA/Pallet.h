@@ -46,6 +46,8 @@ public:
 	uint8_t GetPalletColorG(int index) const { return m_color[index].GetG(); }
 	uint8_t GetPalletColorB(int index) const { return m_color[index].GetB(); }
 
+	const char *GetErrorMessage(PALLET_ERROR errono);
+
 private:
 	PALLET_SIZE m_pallet_size;
 	int m_pallet_count;
