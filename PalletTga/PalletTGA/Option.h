@@ -1,10 +1,7 @@
 // オプションパーサ
-
 #ifndef __OPTION_H__
 #define __OPTION_H__
-
-#include <vector>
-#include "stdint.h"
+#include "stdafx.h"
 
 
 class Option

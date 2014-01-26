@@ -1,6 +1,6 @@
 #ifndef __PALLET_H__
 #define __PALLET_H__
-#include "stdint.h"
+#include "stdafx.h"
 #include "color.h"
 
 class Pallet

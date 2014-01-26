@@ -1,21 +1,8 @@
-#include "define.h"
-
+#include "stdafx.h"
 #include "Option.h"
 #include "Pallet.h"
-
-#include <stdio.h>
-#include <fstream>
-
-#include "stdint.h"
-//#include <stdint.h>
-
 #include "utility.h"
 
-#define COLOR_ARGB(a, r, g, b) (((a)<<24)+((r)<<16)+((g)<<8)+(b))
-#define COLOR_ALPHA(color) (((color)>>24)&0xFF)
-#define COLOR_RED(color) (((color)>>16)&0xFF)
-#define COLOR_GREEN(color) (((color)>>8)&0xFF)
-#define COLOR_BLUE(color) ((color)&0xFF)
 
 #pragma pack(1)
 // TGAƒwƒbƒ_

@@ -1,7 +1,5 @@
-
+#include "stdafx.h"
 #include "Option.h"
-
-#include "define.h"
 
 
 Option::Option(void)

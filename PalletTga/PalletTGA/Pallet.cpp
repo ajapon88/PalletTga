@@ -1,10 +1,7 @@
-
+#include "stdafx.h"
 #include "Pallet.h"
-
 #include "utility.h"
 
-#include <fstream>
-#include <string>
 
 Pallet::Pallet(void)
 : m_pallet_size(PALLET_SIZE_INVALID)

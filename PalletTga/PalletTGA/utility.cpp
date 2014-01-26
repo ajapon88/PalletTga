@@ -1,5 +1,5 @@
+#include "stdafx.h"
 #include "utility.h"
-#include <string.h>
 
 
 bool IsHex(char hex)
