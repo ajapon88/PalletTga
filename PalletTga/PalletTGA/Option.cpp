@@ -52,29 +52,14 @@ void Option::SetArg(int argc, char *argv[])
 // オプション設定
 void Option::SetOption(int index, const char* name, OPTION_ARG is_arg, bool need)
 {
-#if 0
-	for (OptionInfoList::iterator it = m_optinfo.begin(); it != m_optinfo.end(); ++it) {
-		if (it->index == index) {
-			// すでに登録済みの番号なら上書き
-			strncpy(it->name, name, OPTION_NAME_MAX_LENGTH);
-			it->is_arg = is_arg;
-			it->need = need;
-
-			return;
-		}
-	}
-#endif
-
-	// 追加
 	OptionInfo info;
 
 	memset(&info, 0, sizeof(OptionInfo));
-	info.index = index;
 	strncpy(info.name, name, OPTION_NAME_MAX_LENGTH);
 	info.is_arg = is_arg;
 	info.need = need;
 
-	m_optinfo.push_back(info);
+	m_optinfo.insert(OptionInfoList::value_type(index, info));
 }
 
 // オプション簡易チェック
@@ -86,7 +71,7 @@ uint32_t Option::CheckOption()
 	m_arg_index = 0;
 
 	bool not_option = false;
-	std::vector<int> exists;
+	std::set<int> exists;
 	char name[OPTION_NAME_MAX_LENGTH+1];
 	char arg[OPTION_ARG_MAX_LENGTH+1];
 	int opt;
@@ -106,16 +91,13 @@ uint32_t Option::CheckOption()
 			continue;
 		}
 
-		exists.push_back(opt);
+		exists.insert(opt);
 
 		// パラメータチェック
-		for (OptionInfoList::iterator it = m_optinfo.begin(); it != m_optinfo.end(); ++it) {
-			if (it->index == opt) {
-				if (it->is_arg == OPTION_ARG_NEED && strcmp(arg, "") == 0) {
-					error |= OPTION_ERROR_NO_ARG;
-				}
-
-				break;
+		OptionInfoList::iterator it = m_optinfo.find(opt);
+		if (it != m_optinfo.end()) {
+			if (it->second.is_arg == OPTION_ARG_NEED && strcmp(arg, "") == 0) {
+				error |= OPTION_ERROR_NO_ARG;
 			}
 		}
 	}
@@ -123,15 +105,9 @@ uint32_t Option::CheckOption()
 	// 必須オプションチェック
 	if (error == OPTION_ERROR_SUCCESS) {
 		for (OptionInfoList::iterator list_it = m_optinfo.begin(); list_it != m_optinfo.end(); ++list_it) {
-			if (list_it->need) {
-				bool e = false;
-				for (std::vector<int>::iterator exists_it = exists.begin(); exists_it != exists.end(); ++exists_it) {
-					if (list_it->index == *exists_it) {
-						e = true;
-						break;
-					}
-				}
-				if (!e) {
+			if (list_it->second.need) {
+				std::set<int>::iterator exists_it = exists.find(list_it->first);
+				if (exists_it == exists.end()) {
 					error |= OPTION_ERROR_NEED_OPTION;
 					break;
 				}
@@ -147,14 +123,14 @@ uint32_t Option::CheckOption()
 // 引数がオプションと一致するかどうかチェック。引数も取得する
 // -1: 不一致
 //  0以上: 一致。返り値はインデックスを進める数
-int Option::CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo *optinfo, char *optarg)
+int Option::CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo &optinfo, char *optarg)
 {
 	int ret = -1;
 	bool match = false;
 	char optname[OPTION_ARG_MAX_LENGTH+1];
 
 	if (optarg) optarg[0] = '\0';
-	memcpy(optname, optinfo->name, sizeof(optname));
+	memcpy(optname, optinfo.name, sizeof(optname));
 
 	char *p = optname;
 	char *name = NULL;
@@ -167,7 +143,7 @@ int Option::CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo *opti
 			ret = 0;
 		}
 
-		if (optinfo->is_arg == OPTION_ARG_NEED || optinfo->is_arg == OPTION_ARG_INDIFFERENT) {
+		if (optinfo.is_arg == OPTION_ARG_NEED || optinfo.is_arg == OPTION_ARG_INDIFFERENT) {
 			if (match) {
 				if (optarg && arg_index+1 < m_argc) {
 					if (m_argv[arg_index+1][0] != '-') {
@@ -208,14 +184,14 @@ int Option::GetNextOption(char *name, char *arg)
 	}
 
 	for (OptionInfoList::iterator it = m_optinfo.begin(); it != m_optinfo.end(); ++it) {
-		int shift = CheckOptionByArgIndex(m_arg_index, &(*it), arg);
+		int shift = CheckOptionByArgIndex(m_arg_index, it->second, arg);
 
 		if (shift >= 0) {
 			if (name){
 				strcpy(name, m_argv[m_arg_index]);
 			}
 			m_arg_index += shift+1;
-			return it->index;
+			return it->first;
 		}
 	}
 
@@ -237,19 +213,16 @@ int Option::GetOptionByIndex(int option_index, char *name, char *arg)
 	if (name) name[0] = '\0';
 	if (arg) arg[0] = '\0';
 
-	for (OptionInfoList::iterator it = m_optinfo.begin(); it != m_optinfo.end(); ++it) {
-		if (it->index == option_index) {
-			for (int i = 0; i < m_argc; i++) {
-				int shift = CheckOptionByArgIndex(i, &(*it), arg);
-				if (shift >= 0) {
-					if (name){
-						strcpy(name, m_argv[i]);
-					}
-					return it->index;
+	OptionInfoList::iterator it = m_optinfo.find(option_index);
+	if (it != m_optinfo.end()) {
+		for (int i = 0; i < m_argc; i++) {
+			int shift = CheckOptionByArgIndex(i, it->second, arg);
+			if (shift >= 0) {
+				if (name){
+					strcpy(name, m_argv[i]);
 				}
+				return it->first;
 			}
-
-			break;
 		}
 	}
 

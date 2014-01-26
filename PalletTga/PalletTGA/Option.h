@@ -40,12 +40,11 @@ public:
 private:
 	// ƒIƒvƒVƒ‡ƒ“î•ñ
 	typedef struct OptionInfo{
-		int index;
 		char name[OPTION_NAME_MAX_LENGTH+1];
 		OPTION_ARG is_arg;
 		bool need;
 	};
-	typedef std::vector<OptionInfo> OptionInfoList;
+	typedef std::map<int, OptionInfo> OptionInfoList;
 
 	int m_argc;			// ˆø”‚Ì”
 	char **m_argv;		// ˆø”
@@ -55,7 +54,7 @@ private:
 
 
 	void DestroyArg();
-	int CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo *optinfo, char *option_arg);
+	int CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo &optinfo, char *option_arg);
 
 public:
 	Option(void);
