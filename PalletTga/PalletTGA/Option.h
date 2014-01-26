@@ -1,4 +1,4 @@
-// ƒIƒvƒVƒ‡ƒ“ƒp[ƒT
+// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãƒ‘ãƒ¼ã‚µ
 #ifndef __OPTION_H__
 #define __OPTION_H__
 #include "stdafx.h"
@@ -7,38 +7,38 @@
 class Option
 {
 public:
-	// ƒIƒvƒVƒ‡ƒ“”Ô†
+	// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ç•ªå·
 	enum OPTION_INDEX {
-		OPTION_INDEX_END = -1,			// ƒIƒvƒVƒ‡ƒ“I—¹
-		OPTION_INDEX_INVALID = -2,		// –³Œø‚ÈƒIƒvƒVƒ‡ƒ“
-		OPTION_INDEX_NOT_OPTION = 0,	// ƒIƒvƒVƒ‡ƒ“‚¶‚á‚È‚¢
-		OPTION_INDEX_START = 1,			// ƒIƒvƒVƒ‡ƒ“”Ô†‰‚ßDƒIƒvƒVƒ‡ƒ“”Ô†‚Í‚±‚êˆÈ~‚ðŽg‚¤
+		OPTION_INDEX_END = -1,			// ã‚ªãƒ—ã‚·ãƒ§ãƒ³çµ‚äº†
+		OPTION_INDEX_INVALID = -2,		// ç„¡åŠ¹ãªã‚ªãƒ—ã‚·ãƒ§ãƒ³
+		OPTION_INDEX_NOT_OPTION = 0,	// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã˜ã‚ƒãªã„
+		OPTION_INDEX_START = 1,			// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ç•ªå·åˆã‚ï¼Žã‚ªãƒ—ã‚·ãƒ§ãƒ³ç•ªå·ã¯ã“ã‚Œä»¥é™ã‚’ä½¿ã†
 	};
 
-	// ƒIƒvƒVƒ‡ƒ“ˆø”‚Ì—L–³
+	// ã‚ªãƒ—ã‚·ãƒ§ãƒ³å¼•æ•°ã®æœ‰ç„¡
 	enum OPTION_ARG {
-		OPTION_ARG_NEED = 0,	// ƒIƒvƒVƒ‡ƒ“ˆø”•K{
-		OPTION_ARG_UNNEED,		// ƒIƒvƒVƒ‡ƒ“ˆø”•s—v
-		OPTION_ARG_INDIFFERENT,	// ƒIƒvƒVƒ‡ƒ“ˆø”‚ ‚Á‚Ä‚à‚È‚­‚Ä‚à‚æ‚¢
+		OPTION_ARG_NEED = 0,	// ã‚ªãƒ—ã‚·ãƒ§ãƒ³å¼•æ•°å¿…é ˆ
+		OPTION_ARG_UNNEED,		// ã‚ªãƒ—ã‚·ãƒ§ãƒ³å¼•æ•°ä¸è¦
+		OPTION_ARG_INDIFFERENT,	// ã‚ªãƒ—ã‚·ãƒ§ãƒ³å¼•æ•°ã‚ã£ã¦ã‚‚ãªãã¦ã‚‚ã‚ˆã„
 	};
 
-	// ƒIƒvƒVƒ‡ƒ“ƒ`ƒFƒbƒNŒ‹‰Ê
+	// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãƒã‚§ãƒƒã‚¯çµæžœ
 	enum OPTION_ERROR_FLAG {
-		OPTION_ERROR_SUCCESS		= 0,	// ƒGƒ‰[‚È‚µ
-		OPTION_ERROR_INVALID_OPTION	= 1<<0,	// –³Œø‚ÈƒIƒvƒVƒ‡ƒ“‚ª‚ ‚é
-		OPTION_ERROR_NO_ARG			= 1<<1,	// ƒIƒvƒVƒ‡ƒ“ˆø”•K{‚ÈƒIƒvƒVƒ‡ƒ“‚ÉƒIƒvƒVƒ‡ƒ“ˆø”‚ª–³‚¢
-		OPTION_ERROR_ORDER			= 1<<2, // ˆø”‚Ì‡”Ô‚ª‚¨‚©‚µ‚¢B "ƒtƒ@ƒCƒ‹–¼ [ƒIƒvƒVƒ‡ƒ“] ‚»‚Ì‘¼" ‚Ì‡
-		OPTION_ERROR_NEED_OPTION	= 1<<3,	// •K{ƒIƒvƒVƒ‡ƒ“‚ª–³‚¢
+		OPTION_ERROR_SUCCESS		= 0,	// ã‚¨ãƒ©ãƒ¼ãªã—
+		OPTION_ERROR_INVALID_OPTION	= 1<<0,	// ç„¡åŠ¹ãªã‚ªãƒ—ã‚·ãƒ§ãƒ³ãŒã‚ã‚‹
+		OPTION_ERROR_NO_ARG			= 1<<1,	// ã‚ªãƒ—ã‚·ãƒ§ãƒ³å¼•æ•°å¿…é ˆãªã‚ªãƒ—ã‚·ãƒ§ãƒ³ã«ã‚ªãƒ—ã‚·ãƒ§ãƒ³å¼•æ•°ãŒç„¡ã„
+		OPTION_ERROR_ORDER			= 1<<2, // å¼•æ•°ã®é †ç•ªãŒãŠã‹ã—ã„ã€‚ "ãƒ•ã‚¡ã‚¤ãƒ«å [ã‚ªãƒ—ã‚·ãƒ§ãƒ³] ãã®ä»–" ã®é †
+		OPTION_ERROR_NEED_OPTION	= 1<<3,	// å¿…é ˆã‚ªãƒ—ã‚·ãƒ§ãƒ³ãŒç„¡ã„
 	};
 
-	// ‚»‚Ì‘¼’è”
+	// ãã®ä»–å®šæ•°
 	enum {
-		OPTION_NAME_MAX_LENGTH = 256-1,	// ƒIƒvƒVƒ‡ƒ“–¼Å‘å’·(NULL•¶Žšœ‚­)
-		OPTION_ARG_MAX_LENGTH = 256-1,	// ƒIƒvƒVƒ‡ƒ“ˆø”Å‘å’·(NULL•¶Žšœ‚­)
+		OPTION_NAME_MAX_LENGTH = 256-1,	// ã‚ªãƒ—ã‚·ãƒ§ãƒ³åæœ€å¤§é•·(NULLæ–‡å­—é™¤ã)
+		OPTION_ARG_MAX_LENGTH = 256-1,	// ã‚ªãƒ—ã‚·ãƒ§ãƒ³å¼•æ•°æœ€å¤§é•·(NULLæ–‡å­—é™¤ã)
 	};
 
 private:
-	// ƒIƒvƒVƒ‡ƒ“î•ñ
+	// ã‚ªãƒ—ã‚·ãƒ§ãƒ³æƒ…å ±
 	typedef struct OptionInfo{
 		char name[OPTION_NAME_MAX_LENGTH+1];
 		OPTION_ARG is_arg;
@@ -46,9 +46,9 @@ private:
 	};
 	typedef std::map<int, OptionInfo> OptionInfoList;
 
-	int m_argc;			// ˆø”‚Ì”
-	char **m_argv;		// ˆø”
-	int m_arg_index;	// ƒ`ƒFƒbƒN’†‚Ìˆø””Ô†
+	int m_argc;			// å¼•æ•°ã®æ•°
+	char **m_argv;		// å¼•æ•°
+	int m_arg_index;	// ãƒã‚§ãƒƒã‚¯ä¸­ã®å¼•æ•°ç•ªå·
 
 	OptionInfoList m_optinfo;
 

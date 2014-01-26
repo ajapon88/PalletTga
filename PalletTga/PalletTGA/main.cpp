@@ -5,7 +5,7 @@
 
 
 #pragma pack(1)
-// TGAƒwƒbƒ_
+// TGAãƒ˜ãƒƒãƒ€
 typedef struct {
     uint8_t  id_field_length;
     uint8_t  colormap_type;
@@ -21,7 +21,7 @@ typedef struct {
     uint8_t  discripter;
 } TgaHeader;
 
-// TGAƒtƒbƒ^[
+// TGAãƒ•ãƒƒã‚¿ãƒ¼
 typedef struct {
     uint32_t file_position;
     uint32_t divelopper_directory;
@@ -52,10 +52,10 @@ int main(int argc, char *argv[])
 {
 	Option option;
 	Pallet pallet;
-#if 0	// ƒfƒoƒbƒO—p
+#if 0	// ãƒ‡ãƒãƒƒã‚°ç”¨
 	{
 		char *_argv[] = {
-			"Àsƒtƒ@ƒCƒ‹–¼",
+			"å®Ÿè¡Œãƒ•ã‚¡ã‚¤ãƒ«å",
 			"-w", "100",
 			"--height100",
 			"-c", "0x10",
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 		header.colormap_size = pallet.GetPalletSize();
 	    header.bit_per_pixel = 0x08;
 	} else {
-		// ƒpƒŒƒbƒg‚ª–³‚¯‚ê‚Îƒtƒ‹ƒJƒ‰[‚É‚·‚é
+		// ãƒ‘ãƒ¬ãƒƒãƒˆãŒç„¡ã‘ã‚Œã°ãƒ•ãƒ«ã‚«ãƒ©ãƒ¼ã«ã™ã‚‹
 		header.image_type = 0x02;
 	    header.bit_per_pixel = 0x20;
 	}
@@ -173,9 +173,9 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	// ƒwƒbƒ_
+	// ãƒ˜ãƒƒãƒ€
 	ofs.write((char*)&header, sizeof(TgaHeader));
-	// ƒpƒŒƒbƒg
+	// ãƒ‘ãƒ¬ãƒƒãƒˆ
 	for (int i = 0; i < pallet.GetPalletCount(); i++) {
 		uint8_t a = pallet.GetPalletColorA(i);
 		uint8_t r = pallet.GetPalletColorR(i);
@@ -193,14 +193,14 @@ int main(int argc, char *argv[])
 			ofs.write((char*)&a, sizeof(a));
 		}
 	}
-	// ƒf[ƒ^
+	// ãƒ‡ãƒ¼ã‚¿
 	for (int h = 0; h < header.height; h++) {
 		for (int w = 0; w < header.width; w++) {
 			if (header.image_type == 0x01) {
 				uint8_t pixel = static_cast<uint8_t>(color);
 				ofs.write((char*)&pixel, sizeof(pixel));
 			} else {
-				// ƒtƒ‹ƒJƒ‰[
+				// ãƒ•ãƒ«ã‚«ãƒ©ãƒ¼
 				uint8_t a = COLOR_ALPHA(color);
 				uint8_t r = COLOR_RED(color);
 				uint8_t g = COLOR_GREEN(color);
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-	// ƒtƒbƒ^
+	// ãƒ•ãƒƒã‚¿
 	ofs.write((char*)&footer, sizeof(TgaFooter));
 
 	ofs.close();
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
 }
 
 
-// ƒRƒ}ƒ“ƒhà–¾
+// ã‚³ãƒãƒ³ãƒ‰èª¬æ˜
 void Usage(int argc, char *argv[])
 {
 	printf("Usage: %s -w width -h height [options] output\n", argv[0]);
@@ -230,7 +230,7 @@ void Usage(int argc, char *argv[])
 	printf("        --c color:  set pixel color\n");
 }
 
-// TGAƒwƒbƒ_‰Šú‰»
+// TGAãƒ˜ãƒƒãƒ€åˆæœŸåŒ–
 void InitTgaHeader(TgaHeader *header)
 {
     memset(header, 0, sizeof(TgaHeader));
@@ -248,7 +248,7 @@ void InitTgaHeader(TgaHeader *header)
     header->discripter = 0x00;
 }
 
-// TGAƒtƒbƒ^‰Šú‰»
+// TGAãƒ•ãƒƒã‚¿åˆæœŸåŒ–
 void InitTgaFooter(TgaFooter *footer)
 {
     memset(footer, 0, sizeof(TgaFooter));

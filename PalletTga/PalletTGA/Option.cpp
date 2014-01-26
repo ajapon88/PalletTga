@@ -23,7 +23,7 @@ Option::~Option(void)
 	m_optinfo.clear();
 }
 
-// ƒIƒvƒVƒ‡ƒ“ˆø””jŠü
+// ã‚ªãƒ—ã‚·ãƒ§ãƒ³å¼•æ•°ç ´æ£„
 void Option::DestroyArg()
 {
 	for (int i = 0; i < m_argc; i++) {
@@ -34,7 +34,7 @@ void Option::DestroyArg()
 	m_arg_index = 0;
 }
 
-// ƒIƒvƒVƒ‡ƒ“ˆø”ƒZƒbƒg
+// ã‚ªãƒ—ã‚·ãƒ§ãƒ³å¼•æ•°ã‚»ãƒƒãƒˆ
 void Option::SetArg(int argc, char *argv[])
 {
 	DestroyArg();
@@ -49,7 +49,7 @@ void Option::SetArg(int argc, char *argv[])
 	m_arg_index = 0;
 }
 
-// ƒIƒvƒVƒ‡ƒ“Ý’è
+// ã‚ªãƒ—ã‚·ãƒ§ãƒ³è¨­å®š
 void Option::SetOption(int index, const char* name, OPTION_ARG is_arg, bool need)
 {
 	OptionInfo info;
@@ -62,8 +62,8 @@ void Option::SetOption(int index, const char* name, OPTION_ARG is_arg, bool need
 	m_optinfo.insert(OptionInfoList::value_type(index, info));
 }
 
-// ƒIƒvƒVƒ‡ƒ“ŠÈˆÕƒ`ƒFƒbƒN
-// –³Œø‚ÈƒIƒvƒVƒ‡ƒ“AƒIƒvƒVƒ‡ƒ“‚Ì‡”ÔAƒIƒvƒVƒ‡ƒ“ˆø”‚ª‚ ‚é‚©‚Ç‚¤‚©A•K{ƒIƒvƒVƒ‡ƒ“‚ª‚ ‚é‚©‚Ç‚¤‚©‚ðƒ`ƒFƒbƒN
+// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ç°¡æ˜“ãƒã‚§ãƒƒã‚¯
+// ç„¡åŠ¹ãªã‚ªãƒ—ã‚·ãƒ§ãƒ³ã€ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã®é †ç•ªã€ã‚ªãƒ—ã‚·ãƒ§ãƒ³å¼•æ•°ãŒã‚ã‚‹ã‹ã©ã†ã‹ã€å¿…é ˆã‚ªãƒ—ã‚·ãƒ§ãƒ³ãŒã‚ã‚‹ã‹ã©ã†ã‹ã‚’ãƒã‚§ãƒƒã‚¯
 uint32_t Option::CheckOption()
 {
 	uint32_t error = OPTION_ERROR_SUCCESS;
@@ -77,7 +77,7 @@ uint32_t Option::CheckOption()
 	int opt;
 	while((opt = GetNextOption(name, arg)) != OPTION_INDEX_END) {
 		if (OPTION_INDEX_INVALID == opt) {
-			// –¢’è‹`‚ÌƒIƒvƒVƒ‡ƒ“
+			// æœªå®šç¾©ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³
 			error |= OPTION_ERROR_INVALID_OPTION;
 			continue;
 		}
@@ -86,14 +86,14 @@ uint32_t Option::CheckOption()
 			continue;
 		}
 		if (not_option) {
-			// ƒIƒvƒVƒ‡ƒ“‚ªæ‚É—ˆ‚Ä‚¢‚È‚¢
+			// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãŒå…ˆã«æ¥ã¦ã„ãªã„
 			error |= OPTION_ERROR_ORDER;
 			continue;
 		}
 
 		exists.insert(opt);
 
-		// ƒpƒ‰ƒ[ƒ^ƒ`ƒFƒbƒN
+		// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒã‚§ãƒƒã‚¯
 		OptionInfoList::iterator it = m_optinfo.find(opt);
 		if (it != m_optinfo.end()) {
 			if (it->second.is_arg == OPTION_ARG_NEED && strcmp(arg, "") == 0) {
@@ -102,7 +102,7 @@ uint32_t Option::CheckOption()
 		}
 	}
 
-	// •K{ƒIƒvƒVƒ‡ƒ“ƒ`ƒFƒbƒN
+	// å¿…é ˆã‚ªãƒ—ã‚·ãƒ§ãƒ³ãƒã‚§ãƒƒã‚¯
 	if (error == OPTION_ERROR_SUCCESS) {
 		for (OptionInfoList::iterator list_it = m_optinfo.begin(); list_it != m_optinfo.end(); ++list_it) {
 			if (list_it->second.need) {
@@ -120,9 +120,9 @@ uint32_t Option::CheckOption()
 	return error;
 }
 
-// ˆø”‚ªƒIƒvƒVƒ‡ƒ“‚Æˆê’v‚·‚é‚©‚Ç‚¤‚©ƒ`ƒFƒbƒNBˆø”‚àŽæ“¾‚·‚é
-// -1: •sˆê’v
-//  0ˆÈã: ˆê’vB•Ô‚è’l‚ÍƒCƒ“ƒfƒbƒNƒX‚ði‚ß‚é”
+// å¼•æ•°ãŒã‚ªãƒ—ã‚·ãƒ§ãƒ³ã¨ä¸€è‡´ã™ã‚‹ã‹ã©ã†ã‹ãƒã‚§ãƒƒã‚¯ã€‚å¼•æ•°ã‚‚å–å¾—ã™ã‚‹
+// -1: ä¸ä¸€è‡´
+//  0ä»¥ä¸Š: ä¸€è‡´ã€‚è¿”ã‚Šå€¤ã¯ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’é€²ã‚ã‚‹æ•°
 int Option::CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo &optinfo, char *optarg)
 {
 	int ret = -1;
@@ -171,9 +171,9 @@ int Option::CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo &opti
 	return -1;
 }
 
-// ƒIƒvƒVƒ‡ƒ“Žæ“¾
-// ŒÄ‚Ño‚·‚ÆŽ©“®‚ÅŽŸ‚ÌƒIƒvƒVƒ‡ƒ“‚Ös‚­
-// ƒIƒvƒVƒ‡ƒ“”Ô†‚ª•Ô‚é
+// ã‚ªãƒ—ã‚·ãƒ§ãƒ³å–å¾—
+// å‘¼ã³å‡ºã™ã¨è‡ªå‹•ã§æ¬¡ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã¸è¡Œã
+// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ç•ªå·ãŒè¿”ã‚‹
 int Option::GetNextOption(char *name, char *arg)
 {
 	if (name) name[0] = '\0';
@@ -205,9 +205,9 @@ int Option::GetNextOption(char *name, char *arg)
 }
 
 
-// ƒIƒvƒVƒ‡ƒ“Žæ“¾
-// Žw’è‚µ‚½”Ô†‚ÌƒIƒvƒVƒ‡ƒ“‚ðŽæ“¾‚·‚é
-// ‘¶Ý‚µ‚È‚¯‚ê‚Î OPTION_INDEX_INVALID ‚ª•Ô‚é
+// ã‚ªãƒ—ã‚·ãƒ§ãƒ³å–å¾—
+// æŒ‡å®šã—ãŸç•ªå·ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’å–å¾—ã™ã‚‹
+// å­˜åœ¨ã—ãªã‘ã‚Œã° OPTION_INDEX_INVALID ãŒè¿”ã‚‹
 int Option::GetOptionByIndex(int option_index, char *name, char *arg)
 {
 	if (name) name[0] = '\0';

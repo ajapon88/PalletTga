@@ -13,8 +13,8 @@ Pallet::~Pallet(void)
 {
 }
 
-// �p���b�g�t�@�C���ǂݍ���
-// RGB�A��������ARGB�`���ŋ󔒋�؂�̃f�[�^��ǂ߂�
+// パレットファイル読み込み
+// RGB、もしくはARGB形式で空白区切りのデータを読める
 Pallet::PALLET_ERROR Pallet::LoadPalletFile(const char* filename)
 {
 	m_pallet_count = 0;
