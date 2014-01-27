@@ -4,9 +4,9 @@
 
 class Color {
 public:
-	Color(void): m_r(0),m_g(0),m_b(0),m_a(0){}
-	Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a): m_r(r),m_g(g),m_b(b),m_a(a){}
-	Color(uint8_t r, uint8_t g, uint8_t b): m_r(r),m_g(g),m_b(b),m_a(0){}
+	Color(void): m_r(0),m_g(0),m_b(0),m_a(0) {}
+	Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a): m_r(r),m_g(g),m_b(b),m_a(a) {}
+	Color(uint8_t r, uint8_t g, uint8_t b): m_r(r),m_g(g),m_b(b),m_a(0) {}
 	Color(const Color &color) {
 		SetColor(color);
 	}

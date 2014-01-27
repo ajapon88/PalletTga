@@ -41,11 +41,23 @@ namespace {
 		OPT_HELP,
 		OPT_MAX
 	};
+	
+	enum {
+		TGA_IMAGE_TYPE_RLE_FLAG = 8,
+	};
+
+	enum TGA_IMAGE_TYPE {
+		TGA_IMAGE_TYPE_NONE = 0,
+		TGA_IMAGE_TYPE_INDEX_COLOR,
+		TGA_IMAGE_TYPE_FULL_COLOR,
+		TGA_IMAGE_TYPE_MONOCHRO,
+	};
 }
 
 void Usage(int argc, char *argv[]);
 void InitTgaHeader(TgaHeader *header);
 void InitTgaFooter(TgaFooter *footer);
+void RLECompress(std::vector<uint8_t> *rle_data, const std::vector<uint8_t> &raw_data, int pixel_byte);
 
 
 int main(int argc, char *argv[])
@@ -55,11 +67,12 @@ int main(int argc, char *argv[])
 #if 0	// デバッグ用
 	{
 		char *_argv[] = {
-			"実行ファイル名",
+			"",
 			"-w", "100",
 			"--height100",
-			"-c", "0x10",
-			"-p", "pallet.txt",
+			"-c", "0xEE00CC00",
+//			"-p", "pallet.txt",
+			"--RLE",
 			"output.tga"
 		};
 		int _argc = ARRAY_SIZE(_argv);
@@ -73,6 +86,7 @@ int main(int argc, char *argv[])
 	option.SetOption(OPT_H, "-h|--height", Option::OPTION_ARG_NEED, true);
 	option.SetOption(OPT_COLOR, "-c|--color", Option::OPTION_ARG_NEED, false);
 	option.SetOption(OPT_PALLET, "-p|--pallet", Option::OPTION_ARG_NEED, false);
+	option.SetOption(OPT_RLE, "--RLE", Option::OPTION_ARG_UNNEED, false);
 	option.SetOption(OPT_HELP, "--help", Option::OPTION_ARG_UNNEED, false);
 
 	if (option.GetOptionByIndex(OPT_HELP, NULL, NULL) != Option::OPTION_INDEX_INVALID) {
@@ -124,6 +138,9 @@ int main(int argc, char *argv[])
 					}
 				}
 				break;
+			case OPT_RLE:
+				is_rle = true;
+				break;
 			case Option::OPTION_INDEX_NOT_OPTION:
 				if (strcmp(filename, "") == 0) {
 					strncpy(filename, option_name, sizeof(filename));
@@ -154,14 +171,17 @@ int main(int argc, char *argv[])
 	header.height = height;
 	if (pallet.GetPalletCount() > 0) {
 		header.colormap_type = 0x01;
-		header.image_type = 0x01;
+		header.image_type = TGA_IMAGE_TYPE_INDEX_COLOR;
 		header.colormap_length = pallet.GetPalletCount();
 		header.colormap_size = pallet.GetPalletSize();
 	    header.bit_per_pixel = 0x08;
 	} else {
 		// パレットが無ければフルカラーにする
-		header.image_type = 0x02;
+		header.image_type = TGA_IMAGE_TYPE_FULL_COLOR;
 	    header.bit_per_pixel = 0x20;
+	}
+	if (is_rle) {
+		header.image_type += TGA_IMAGE_TYPE_RLE_FLAG;
 	}
 
 	InitTgaFooter(&footer);
@@ -194,23 +214,33 @@ int main(int argc, char *argv[])
 		}
 	}
 	// データ
+	std::vector<uint8_t> raw_data, rle_data, *output_data;
 	for (int h = 0; h < header.height; h++) {
 		for (int w = 0; w < header.width; w++) {
-			if (header.image_type == 0x01) {
-				uint8_t pixel = static_cast<uint8_t>(color);
-				ofs.write((char*)&pixel, sizeof(pixel));
-			} else {
+			if ((header.image_type&~TGA_IMAGE_TYPE_RLE_FLAG) == TGA_IMAGE_TYPE_INDEX_COLOR) {
+				raw_data.push_back(static_cast<uint8_t>(color));
+			} else if ((header.image_type&~TGA_IMAGE_TYPE_RLE_FLAG) == TGA_IMAGE_TYPE_FULL_COLOR) {
 				// フルカラー
 				uint8_t a = COLOR_ALPHA(color);
 				uint8_t r = COLOR_RED(color);
 				uint8_t g = COLOR_GREEN(color);
 				uint8_t b = COLOR_BLUE(color);
-				ofs.write((char*)&b, sizeof(b));
-				ofs.write((char*)&g, sizeof(g));
-				ofs.write((char*)&r, sizeof(r));
-				ofs.write((char*)&a, sizeof(a));
+				raw_data.push_back(b);
+				raw_data.push_back(g);
+				raw_data.push_back(r);
+				raw_data.push_back(a);
 			}
 		}
+	}
+	if (header.image_type&TGA_IMAGE_TYPE_RLE_FLAG) {
+		RLECompress(&rle_data, raw_data, header.bit_per_pixel/8);
+		output_data = &rle_data;
+	} else {
+		output_data = &raw_data;
+	}
+	for (std::vector<uint8_t>::iterator it = output_data->begin(); it != output_data->end(); ++it) {
+		char pixel = static_cast<char>(*it);
+		ofs.write(&pixel, sizeof(pixel));
 	}
 	// フッタ
 	ofs.write((char*)&footer, sizeof(TgaFooter));
@@ -228,6 +258,7 @@ void Usage(int argc, char *argv[])
 	printf("Usage: %s -w width -h height [options] output\n", argv[0]);
 	printf("        --help:  show usage\n");
 	printf("        --c color:  set pixel color\n");
+	printf("        --RLE:  RLE commpress\n");
 }
 
 // TGAヘッダ初期化
@@ -256,4 +287,67 @@ void InitTgaFooter(TgaFooter *footer)
     footer->divelopper_directory = 0x00000000;
     memcpy(footer->tga_sign, "TRUEVISION-TARGA", std::min(sizeof(footer->tga_sign), strlen("TRUEVISION-TARGA")+1));
     footer->dummy = 0x00;
+}
+
+		// RLE圧縮（連続データのみ）
+void RLECompress(std::vector<uint8_t> *rle_data, const std::vector<uint8_t> &raw_data, int pixel_byte)
+{
+	const uint8_t RLE_CONSECUTIVE_FLAG = 0x80;
+	
+	uint8_t *pixel = new uint8_t[pixel_byte];
+	uint8_t *buf = new uint8_t[pixel_byte];
+	uint8_t count = 0;
+	int byte = 0;
+	int state = 0;
+	rle_data->clear();
+	bool data_flag = false;
+	for (std::vector<uint8_t>::const_iterator it = raw_data.begin(); it != raw_data.end(); ++it) {
+		data_flag = true;
+		switch (state) {
+		// ピクセルデータ取得
+		case 0:
+			pixel[byte++] = *it;
+			if (byte >= pixel_byte) {
+				byte = 0;
+				count = 0;
+				state++;
+			}
+			break;
+		// 連続数カウント
+		case 1:
+			buf[byte++] = *it;
+			if (byte >= pixel_byte) {
+				byte = 0;
+				bool save = false;
+				if (memcmp(pixel, buf, pixel_byte*sizeof(uint8_t)) == 0) {
+					count++;
+					if (count >= RLE_CONSECUTIVE_FLAG-1) {
+						save = true;
+						// 一旦フラグをおろす
+						data_flag = false;
+					}
+				} else {
+					save = true;
+				}
+				if (save) {
+					rle_data->push_back(RLE_CONSECUTIVE_FLAG|count);
+					for (int i = 0; i < pixel_byte; i++) {
+						rle_data->push_back(pixel[i]);
+					}
+					memcpy(pixel, buf, pixel_byte*sizeof(uint8_t));
+					count = 0;
+				}
+			}
+			break;
+		}
+	}
+	if (data_flag) {
+		// あまったデータを追加
+		rle_data->push_back(RLE_CONSECUTIVE_FLAG|count);
+		for (int i = 0; i < pixel_byte; i++) {
+			rle_data->push_back(pixel[i]);
+		}
+	}
+	SAFE_DELETE_ARRAY(pixel);
+	SAFE_DELETE_ARRAY(buf);
 }

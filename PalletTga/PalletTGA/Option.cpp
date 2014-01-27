@@ -187,7 +187,7 @@ int Option::GetNextOption(char *name, char *arg)
 		int shift = CheckOptionByArgIndex(m_arg_index, it->second, arg);
 
 		if (shift >= 0) {
-			if (name){
+			if (name) {
 				strcpy(name, m_argv[m_arg_index]);
 			}
 			m_arg_index += shift+1;
@@ -218,7 +218,7 @@ int Option::GetOptionByIndex(int option_index, char *name, char *arg)
 		for (int i = 0; i < m_argc; i++) {
 			int shift = CheckOptionByArgIndex(i, it->second, arg);
 			if (shift >= 0) {
-				if (name){
+				if (name) {
 					strcpy(name, m_argv[i]);
 				}
 				return it->first;
