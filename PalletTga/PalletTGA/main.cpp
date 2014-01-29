@@ -108,28 +108,24 @@ int main(int argc, char *argv[])
 	char palletfile[256] = "";
 
 	int opt;
-	char option_name[Option::OPTION_NAME_MAX_LENGTH+1];
-	char option_arg[Option::OPTION_ARG_MAX_LENGTH+1];
-	while((opt = option.GetNextOption(option_name, option_arg)) != Option::OPTION_INDEX_END) {
+	std::string option_name;
+	std::string option_arg;
+	while((opt = option.GetNextOption(&option_name, &option_arg)) != Option::OPTION_INDEX_END) {
 #ifdef _DEBUG
-		printf("opt: %d:%s(%s)\n", opt, option_name, option_arg);
+		printf("opt: %d:%s(%s)\n", opt, option_name.c_str(), option_arg.c_str());
 #endif
 		switch (opt) {
 			case OPT_W:
-				width = atoi(option_arg);
+				width = atoi(option_arg.c_str());
 				break;
 			case OPT_H:
-				height = atoi(option_arg);
+				height = atoi(option_arg.c_str());
 				break;
 			case OPT_COLOR:
-				if (strncmp(option_arg, "0x", 2) == 0) {
-					color = HexStr2Int(option_arg);
-				} else {
-					color = atoi(option_arg);
-				}
+				color = Str2Int(option_arg.c_str());
 				break;
 			case OPT_PALLET: {
-					strncpy(palletfile, option_arg, sizeof(palletfile));
+					strncpy(palletfile, option_arg.c_str(), sizeof(palletfile));
 					Pallet::PALLET_ERROR perror = pallet.LoadPalletFile(palletfile);
 					if (Pallet::PALLET_SUCCESS != perror) {
 						printf("Pallet error(%d): %s\n", perror, pallet.GetErrorMessage(perror));
@@ -143,7 +139,7 @@ int main(int argc, char *argv[])
 				break;
 			case Option::OPTION_INDEX_NOT_OPTION:
 				if (strcmp(filename, "") == 0) {
-					strncpy(filename, option_name, sizeof(filename));
+					strncpy(filename, option_name.c_str(), sizeof(filename));
 				}
 				break;
 		}
@@ -257,7 +253,7 @@ void Usage(int argc, char *argv[])
 {
 	printf("Usage: %s -w width -h height [options] output\n", argv[0]);
 	printf("        --help:  show usage\n");
-	printf("        --c color:  set pixel color\n");
+	printf("        -c color:  set pixel color\n");
 	printf("        --RLE:  RLE commpress\n");
 }
 

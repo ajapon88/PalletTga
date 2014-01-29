@@ -51,3 +51,11 @@ int HexStr2Int(const char* hex)
 
 	return res;
 }
+
+int Str2Int(const char *str)
+{
+	if (strncmp(str, "0x", 2) == 0) {
+		return HexStr2Int(str);
+	}
+	return atoi(str);
+}

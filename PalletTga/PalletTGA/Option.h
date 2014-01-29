@@ -31,30 +31,27 @@ public:
 		OPTION_ERROR_NEED_OPTION	= 1<<3,	// 必須オプションが無い
 	};
 
-	// その他定数
-	enum {
-		OPTION_NAME_MAX_LENGTH = 256-1,	// オプション名最大長(NULL文字除く)
-		OPTION_ARG_MAX_LENGTH = 256-1,	// オプション引数最大長(NULL文字除く)
-	};
-
 private:
 	// オプション情報
 	typedef struct OptionInfo{
-		char name[OPTION_NAME_MAX_LENGTH+1];
+		int index;
+//		char name[OPTION_NAME_MAX_LENGTH+1];
 		OPTION_ARG is_arg;
 		bool need;
 	};
 	typedef std::map<int, OptionInfo> OptionInfoList;
+	typedef std::map<int, std::set<std::string> > OptionNameList;
 
 	int m_argc;			// 引数の数
-	char **m_argv;		// 引数
+	std::vector<std::string> m_argv;		// 引数
 	int m_arg_index;	// チェック中の引数番号
 
 	OptionInfoList m_optinfo;
+	OptionNameList m_optname;
 
 
 	void DestroyArg();
-	int CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo &optinfo, char *option_arg);
+	int CheckOptionByArgIndex(unsigned int arg_index, const OptionInfo &optinfo, std::string *option_arg);
 
 public:
 	Option(void);
@@ -64,8 +61,8 @@ public:
 	void SetArg(int argc, char *argv[]);
 	void SetOption(int index, const char* name, OPTION_ARG is_arg, bool need);
 	uint32_t CheckOption();
-	int GetNextOption(char *name, char *arg);
-	int GetOptionByIndex(int option_index, char *name, char *arg);
+	int GetNextOption(std::string *name, std::string *arg);
+	int GetOptionByIndex(int option_index, std::string *name, std::string *arg);
 	void ResetOptionIndex() { m_arg_index = 0; }
 };
 
